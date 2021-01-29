@@ -8,6 +8,14 @@ const { pem2jwk } = require('pem-jwk');
 const http = require('http');
 const NodeRSA = require('node-rsa');
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Authorization',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': 86400,
+};
+
 const SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
 const SERVER_JWK = pem2jwk(SERVER_PRIVATE_KEY);
 const SERVER_JWK_KEY_ID = '0';
@@ -44,6 +52,13 @@ async function accessTokenFetcher() {
 function requestListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
+  if (request.method === 'OPTIONS') {
+    console.log('options');
+    response.writeHead(204, CORS_HEADERS);
+    response.end();
+    return;
+  }
+
   switch (url.pathname) {
     case '/.well-known/openid-configuration':
       configurationListener(request, response);
@@ -61,7 +76,10 @@ function requestListener(request, response) {
       certsListener(request, response);
       break;
     default:
-      response.writeHead(404, { 'Content-Type': 'text/plain' });
+      response.writeHead(404, {
+        'Content-Type': 'text/plain',
+        ...CORS_HEADERS,
+      });
       response.write('404 Not Found\n');
       response.end();
   }
@@ -107,7 +125,7 @@ function configurationListener(request, response) {
 
   response.writeHead(200, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    ...CORS_HEADERS,
   });
 
   response.write(JSON.stringify(configuration, null, 2));
@@ -127,6 +145,7 @@ function authListener(request, response) {
 
   response.writeHead(302, {
     Location: redirectUri.toString(),
+    ...CORS_HEADERS,
   });
   response.end();
 }
@@ -170,9 +189,9 @@ async function tokenListener(request, response) {
 
   response.writeHead(200, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'no-store',
     Pragma: 'no-cache',
+    ...CORS_HEADERS,
   });
   response.write(JSON.stringify(responseBody, null, 2));
   response.end();
@@ -187,7 +206,7 @@ function userinfoListener(request, response) {
 
   response.writeHead(200, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    ...CORS_HEADERS,
   });
   response.write(JSON.stringify(userinfo, null, 2));
   response.end();
@@ -205,7 +224,7 @@ function certsListener(request, response) {
 
   response.writeHead(200, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    ...CORS_HEADERS,
   });
   response.write(JSON.stringify(keys, null, 2));
   response.end();

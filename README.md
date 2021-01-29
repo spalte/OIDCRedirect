@@ -5,7 +5,7 @@
 Run:
 
 ```shell
-docker-compose up
+docker-compose up --build
 ```
 
 This will build the OIDC redirect image, and launch it (port 8085) along with OHIF (port 3000).
