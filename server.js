@@ -60,7 +60,8 @@ async function accessTokenFetcher() {
   if (GOOGLE_REFRESH_TOKEN) {
     return refreshAccessToken();
   }
-  return 'super_token';
+
+  return getStaticAccessToken();
 }
 
 function requestListener(request, response) {
@@ -190,10 +191,12 @@ async function tokenListener(request, response) {
     aud: clientId,
   };
 
+  const accessTokenData = await accessTokenFetcher();
+
   const responseBody = {
-    access_token: await accessTokenFetcher(),
-    token_type: 'Bearer',
-    expires_in: 30 * 60,
+    access_token: accessTokenData.access_token,
+    token_type: accessTokenData.token_type,
+    expires_in: accessTokenData.expires_in,
     ...(requestParameters.grant_type === 'authorization_code' && {
       refresh_token: 'refresh_me',
       id_token: jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h', keyid: SERVER_JWK_KEY_ID }),
@@ -243,6 +246,14 @@ function certsListener(request, response) {
   response.end();
 }
 
+async function getStaticAccessToken() {
+  return Promise.resolve({
+    access_token: 'super_token',
+    token_type: 'Bearer',
+    expires_in: 60 * 60,
+  });
+}
+
 async function getServiceAccountAccessToken() {
   const authenticationJWT = jwt.sign({
     scope: 'https://www.googleapis.com/auth/cloud-platform',
@@ -257,7 +268,7 @@ async function getServiceAccountAccessToken() {
   params.append('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer');
   params.append('assertion', authenticationJWT);
 
-  return (await axios.post('https://oauth2.googleapis.com/token', params)).data.access_token;
+  return (await axios.post('https://oauth2.googleapis.com/token', params)).data;
 }
 
 async function refreshAccessToken() {
@@ -270,7 +281,7 @@ async function refreshAccessToken() {
       username: GOOGLE_CLIENT_ID,
       password: GOOGLE_CLIENT_SECRET,
     },
-  })).data.access_token;
+  })).data;
 }
 
 function getIssuer(request) {
