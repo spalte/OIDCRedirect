@@ -25,7 +25,7 @@ const { LOGGED_IN_USER_EMAIL } = process.env;
 const { LOGGED_IN_USER_NAME } = process.env;
 
 if (!LOGGED_IN_USER_SUB) {
-  console.log('env var LOGGED_IN_USER_SUB is not defined and required');
+  console.log('env var LOGGED_IN_USER_SUB is required but is not defined');
 }
 
 let { LISTEN_PORT } = process.env;
@@ -67,7 +67,6 @@ function requestListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   if (request.method === 'OPTIONS') {
-    console.log('options');
     response.writeHead(204, CORS_HEADERS);
     response.end();
     return;
