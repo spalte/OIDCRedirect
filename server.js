@@ -275,6 +275,7 @@ async function refreshAccessToken() {
   const params = new URLSearchParams();
   params.append('grant_type', 'refresh_token');
   params.append('refresh_token', GOOGLE_REFRESH_TOKEN);
+  params.append('scope', 'openid email profile https://www.googleapis.com/auth/cloud-platform');
 
   return (await axios.post('https://oauth2.googleapis.com/token', params, {
     auth: {
