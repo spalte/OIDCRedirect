@@ -4,10 +4,14 @@ const fs = require('fs');
 const querystring = require('querystring');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const { pem2jwk } = require('pem-jwk');
 const http = require('http');
 const NodeRSA = require('node-rsa');
 
 const SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
+const SERVER_JWK = pem2jwk(SERVER_PRIVATE_KEY);
+const SERVER_JWK_KEY_ID = '0';
+
 const { LOGGED_IN_USER_SUB } = process.env;
 const { LOGGED_IN_USER_EMAIL } = process.env;
 const { LOGGED_IN_USER_NAME } = process.env;
@@ -53,6 +57,9 @@ function requestListener(request, response) {
     case '/userinfo':
       userinfoListener(request, response);
       break;
+    case '/certs':
+      certsListener(request, response);
+      break;
     default:
       response.writeHead(404, { 'Content-Type': 'text/plain' });
       response.write('404 Not Found\n');
@@ -68,15 +75,9 @@ function configurationListener(request, response) {
     authorization_endpoint: `${issuer}/auth`,
     token_endpoint: `${issuer}/token`,
     userinfo_endpoint: `${issuer}/userinfo`,
+    jwks_uri: `${issuer}/certs`,
     response_types_supported: [
       'code',
-      'token',
-      'id_token',
-      'code token',
-      'code id_token',
-      'token id_token',
-      'code token id_token',
-      'none',
     ],
     subject_types_supported: [
       'public',
@@ -100,6 +101,7 @@ function configurationListener(request, response) {
     ],
     grant_types_supported: [
       'authorization_code',
+      'refresh_token',
     ],
   };
 
@@ -146,7 +148,8 @@ async function tokenListener(request, response) {
     });
   }
 
-  const clientId = (await readPost()).client_id;
+  const requsetParamaters = await readPost();
+  const clientId = requsetParamaters.client_id;
   const issuer = getIssuer(request);
 
   const idClaims = {
@@ -154,13 +157,15 @@ async function tokenListener(request, response) {
     sub: LOGGED_IN_USER_SUB,
     aud: clientId,
   };
-  const idToken = jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h' });
 
   const responseBody = {
     access_token: await accessTokenFetcher(),
     token_type: 'Bearer',
-    expires_in: 3600,
-    id_token: idToken,
+    expires_in: 30 * 60,
+    ...(requsetParamaters.grant_type === 'authorization_code' && {
+      refresh_token: 'refreshme',
+      id_token: jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h', keyid: SERVER_JWK_KEY_ID }),
+    }),
   };
 
   response.writeHead(200, {
@@ -185,6 +190,24 @@ function userinfoListener(request, response) {
     'Access-Control-Allow-Origin': '*',
   });
   response.write(JSON.stringify(userinfo, null, 2));
+  response.end();
+}
+
+function certsListener(request, response) {
+  const keys = [{
+    n: SERVER_JWK.n,
+    e: SERVER_JWK.e,
+    kid: SERVER_JWK_KEY_ID,
+    kty: SERVER_JWK.kty,
+    alg: 'RS256',
+    use: 'sig',
+  }];
+
+  response.writeHead(200, {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  });
+  response.write(JSON.stringify(keys, null, 2));
   response.end();
 }
 
