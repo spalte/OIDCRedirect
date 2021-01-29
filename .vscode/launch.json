@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "env": {
+                "LOGGED_IN_USER_SUB": "45678",
+                "LOGGED_IN_USER_NAME": "Joël Spaltenstein",
+                "LOGGED_IN_USER_EMAIL": "debugger@naturalimage.ch",
+//                "SERVICE_ACCOUNT_PRIVATE_KEY_FILE": "service_account_key.pem",
+//                "SERVICE_ACCOUNT_EMAIL": "super_complicated_server_account_email@gmail.com",
+                "LISTEN_PORT": "8085",
+            },
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/server.js"
+        }
+    ]
+}

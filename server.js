@@ -10,9 +10,19 @@ const LOGGED_IN_USER_SUB = process.env.LOGGED_IN_USER_SUB;
 const LOGGED_IN_USER_EMAIL = process.env.LOGGED_IN_USER_EMAIL;
 const LOGGED_IN_USER_NAME = process.env.LOGGED_IN_USER_NAME;
 
+if (!LOGGED_IN_USER_SUB) {
+    console.log("env var LOGGED_IN_USER_SUB is not defined and required");
+}
+
+let LISTEN_PORT = process.env.LISTEN_PORT;
+if (!LISTEN_PORT) {
+    LISTEN_PORT = 80;
+}
+LISTEN_PORT = Number(LISTEN_PORT);
+
 let SERVICE_ACCOUNT_PRIVATE_KEY = undefined;
 let SERVICE_ACCOUNT_EMAIL = undefined;
-console.log(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE);
+
 if (process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE) {
     SERVICE_ACCOUNT_PRIVATE_KEY = fs.readFileSync(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE, 'ascii');
     SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL;
@@ -48,11 +58,8 @@ const requestListener = function (request, response) {
 const configurationListener = function (request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
-    let issuer = process.env.ISSUER;
-    if (!issuer) {
-        issuer = url.origin;
-    }
-
+    const issuer = getIssuer(request);
+    
     const configuration = {
         issuer: issuer,
         authorization_endpoint: `${issuer}/auth`,
@@ -153,12 +160,8 @@ const tokenListener = async function (request, response) {
         }); 
     }
     const clientId = (await readPost(request))['client_id'];
-
-    let issuer = process.env.ISSUER;
-    if (!issuer) {
-        issuer = url.origin;
-    }
-
+    const issuer = getIssuer(request);
+    
     const idClaims = {
         iss: issuer,
         sub: LOGGED_IN_USER_SUB,
@@ -198,7 +201,7 @@ const userinfoListener = function (request, response) {
     response.end();
 }
 
-async function getServiceAccountAccessToken() {
+const getServiceAccountAccessToken = async function () {
     const authenticationJWT = jwt.sign({
       scope: 'https://www.googleapis.com/auth/cloud-platform',
     }, SERVICE_ACCOUNT_PRIVATE_KEY, {
@@ -213,9 +216,23 @@ async function getServiceAccountAccessToken() {
     params.append('assertion', authenticationJWT);
   
     return (await axios.post('https://oauth2.googleapis.com/token', params)).data.access_token;
-  }
+}
+
+const getIssuer = function (request) {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+
+    let issuer = process.env.ISSUER;
+    if (!issuer) {
+        if (request.headers["x-forwarded-host"]) {
+            issuer = `${request.headers["x-forwarded-proto"]}://${request.headers["x-forwarded-host"]}`;
+        } else {
+            issuer = url.origin;
+        }
+    }
+    return issuer;
+}
 
 const server = http.createServer(requestListener);
-server.listen(8085, () => {
+server.listen(LISTEN_PORT, () => {
     console.log(`Server is running`);
 });

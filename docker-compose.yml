@@ -9,10 +9,10 @@ services:
       - LOGGED_IN_USER_SUB=123456
       - LOGGED_IN_USER_NAME="Joël Spaltenstein"
       - LOGGED_IN_USER_EMAIL="spalte@naturalimage.ch"
-      - SERVICE_ACCOUNT_PRIVATE_KEY_FILE=service_account_key.pem
-      - SERVICE_ACCOUNT_EMAIL="super_complicated_server_account_email@gmail.com"
-    volumes:
-      - ./service_account_key.pem:service_account_key.pem
+#      - SERVICE_ACCOUNT_PRIVATE_KEY_FILE=/app/service_account_key.pem
+#      - SERVICE_ACCOUNT_EMAIL="super_complicated_server_account_email@gmail.com"
+#    volumes:
+#      - ./service_account_key.pem:/app/service_account_key.pem
   ohif:
     image: "ohif/viewer"
     volumes:
