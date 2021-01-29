@@ -30,6 +30,8 @@ OHIF will open, initial an OIDC session with the OIDC Redirector, and connect to
 
 `ISSUER` can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default it will attempt to derive it from the request.
 
-If `SERVICE_ACCOUNT_PRIVATE_KEY_FILE` and `SERVICE_ACCOUNT_EMAIL` are defined, this provider will return an Access Token acquired from Google for that service account. (Done blindly without full testing because I don't have credits with Google right now)
+If `SERVICE_ACCOUNT_PRIVATE_KEY_FILE` and `SERVICE_ACCOUNT_EMAIL` are defined, this provider will return an Access Token acquired from Google for that service account.
+
+Alternatively, `GOOGLE_REFRESH_TOKEN_FILE`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET_FILE` can be be specified in which case Access Tokens are obtained by using the refresh token.
 
 `LISTEN_PORT` can be used to set what port will be used. Default 80.

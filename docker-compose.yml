@@ -11,8 +11,13 @@ services:
       - LOGGED_IN_USER_EMAIL=spalte@naturalimage.ch
 #      - SERVICE_ACCOUNT_PRIVATE_KEY_FILE=/app/service_account_key.pem
 #      - SERVICE_ACCOUNT_EMAIL=super_complicated_server_account_email@gmail.com
+      - GOOGLE_CLIENT_ID=my_client_id
+      - GOOGLE_REFRESH_TOKEN_FILE=/app/google_refresh_token.txt
+      - GOOGLE_CLIENT_SECRET_FILE=/app/google_client_secret.txt
 #    volumes:
 #      - ./service_account_key.pem:/app/service_account_key.pem
+      - ./google_refresh_token.txt:/app/google_refresh_token.txt
+      - ./google_client_secret.txt:/app/google_client_secret.txt
   ohif:
     image: "ohif/viewer"
     volumes:

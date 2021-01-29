@@ -38,13 +38,27 @@ let SERVICE_ACCOUNT_PRIVATE_KEY;
 let SERVICE_ACCOUNT_EMAIL;
 
 if (process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE) {
-  SERVICE_ACCOUNT_PRIVATE_KEY = fs.readFileSync(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE, 'ascii');
+  SERVICE_ACCOUNT_PRIVATE_KEY = fs.readFileSync(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE, 'ascii').trim();
   SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL;
+}
+
+let GOOGLE_REFRESH_TOKEN;
+let GOOGLE_CLIENT_ID;
+let GOOGLE_CLIENT_SECRET;
+
+if (process.env.GOOGLE_CLIENT_SECRET_FILE) {
+  GOOGLE_REFRESH_TOKEN = fs.readFileSync(process.env.GOOGLE_REFRESH_TOKEN_FILE, 'ascii').trim();
+  GOOGLE_CLIENT_SECRET = fs.readFileSync(process.env.GOOGLE_CLIENT_SECRET_FILE, 'ascii').trim();
+  GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 }
 
 async function accessTokenFetcher() {
   if (SERVICE_ACCOUNT_PRIVATE_KEY) {
     return getServiceAccountAccessToken();
+  }
+
+  if (GOOGLE_REFRESH_TOKEN) {
+    return refreshAccessToken();
   }
   return 'super_token';
 }
@@ -245,6 +259,19 @@ async function getServiceAccountAccessToken() {
   params.append('assertion', authenticationJWT);
 
   return (await axios.post('https://oauth2.googleapis.com/token', params)).data.access_token;
+}
+
+async function refreshAccessToken() {
+  const params = new URLSearchParams();
+  params.append('grant_type', 'refresh_token');
+  params.append('refresh_token', GOOGLE_REFRESH_TOKEN);
+
+  return (await axios.post('https://oauth2.googleapis.com/token', params, {
+    auth: {
+      username: GOOGLE_CLIENT_ID,
+      password: GOOGLE_CLIENT_SECRET,
+    },
+  })).data.access_token;
 }
 
 function getIssuer(request) {
