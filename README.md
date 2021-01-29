@@ -3,6 +3,7 @@
 ## Running with Docker-Compose
 
 Run:
+
 ```shell
 docker-compose up
 ```

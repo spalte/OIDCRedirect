@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable no-use-before-define */
 const fs = require('fs');
 const querystring = require('querystring');
 const axios = require('axios');
@@ -28,35 +30,37 @@ if (process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE) {
   SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL;
 }
 
-const accessTokenFetcher = async function () {
+async function accessTokenFetcher() {
   if (SERVICE_ACCOUNT_PRIVATE_KEY) {
     return getServiceAccountAccessToken();
   }
   return 'supertoken';
-};
+}
 
-const requestListener = function (request, response) {
+function requestListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   switch (url.pathname) {
     case '/.well-known/openid-configuration':
-      return configurationListener(request, response);
+      configurationListener(request, response);
+      break;
     case '/auth':
-      return authListener(request, response);
+      authListener(request, response);
+      break;
     case '/token':
-      return tokenListener(request, response);
+      tokenListener(request, response);
+      break;
     case '/userinfo':
-      return userinfoListener(request, response);
+      userinfoListener(request, response);
+      break;
     default:
       response.writeHead(404, { 'Content-Type': 'text/plain' });
       response.write('404 Not Found\n');
       response.end();
   }
-};
+}
 
-const configurationListener = function (request, response) {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-
+function configurationListener(request, response) {
   const issuer = getIssuer(request);
 
   const configuration = {
@@ -106,9 +110,9 @@ const configurationListener = function (request, response) {
 
   response.write(JSON.stringify(configuration, null, 2));
   response.end();
-};
+}
 
-const authListener = function (request, response) {
+function authListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   const state = url.searchParams.get('state');
@@ -123,12 +127,10 @@ const authListener = function (request, response) {
     Location: redirectUri.toString(),
   });
   response.end();
-};
+}
 
-const tokenListener = async function (request, response) {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-
-  readPost = function (request) {
+async function tokenListener(request, response) {
+  function readPost() {
     return new Promise((resolve, reject) => {
       let body = '';
       request.on('data', (data) => {
@@ -142,8 +144,9 @@ const tokenListener = async function (request, response) {
         reject(err);
       });
     });
-  };
-  const clientId = (await readPost(request)).client_id;
+  }
+
+  const clientId = (await readPost()).client_id;
   const issuer = getIssuer(request);
 
   const idClaims = {
@@ -168,9 +171,9 @@ const tokenListener = async function (request, response) {
   });
   response.write(JSON.stringify(responseBody, null, 2));
   response.end();
-};
+}
 
-const userinfoListener = function (request, response) {
+function userinfoListener(request, response) {
   const userinfo = {
     sub: LOGGED_IN_USER_SUB,
     ...(LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL }),
@@ -183,9 +186,9 @@ const userinfoListener = function (request, response) {
   });
   response.write(JSON.stringify(userinfo, null, 2));
   response.end();
-};
+}
 
-const getServiceAccountAccessToken = async function () {
+async function getServiceAccountAccessToken() {
   const authenticationJWT = jwt.sign({
     scope: 'https://www.googleapis.com/auth/cloud-platform',
   }, SERVICE_ACCOUNT_PRIVATE_KEY, {
@@ -200,9 +203,9 @@ const getServiceAccountAccessToken = async function () {
   params.append('assertion', authenticationJWT);
 
   return (await axios.post('https://oauth2.googleapis.com/token', params)).data.access_token;
-};
+}
 
-const getIssuer = function (request) {
+function getIssuer(request) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   let issuer = process.env.ISSUER;
@@ -214,7 +217,7 @@ const getIssuer = function (request) {
     }
   }
   return issuer;
-};
+}
 
 const server = http.createServer(requestListener);
 server.listen(LISTEN_PORT, () => {
