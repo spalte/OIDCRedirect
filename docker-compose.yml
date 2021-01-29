@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  oidcredirect:
+    build: .
+    user: "node"
+    ports:
+      - "8085:80"
+    environment:
+      - LOGGED_IN_USER_SUB=123456
+      - LOGGED_IN_USER_NAME="Joël Spaltenstein"
+      - LOGGED_IN_USER_EMAIL="spalte@naturalimage.ch"
+      - SERVICE_ACCOUNT_PRIVATE_KEY_FILE=service_account_key.pem
+      - SERVICE_ACCOUNT_EMAIL="super_complicated_server_account_email@gmail.com"
+    volumes:
+      - ./service_account_key.pem:service_account_key.pem
+  ohif:
+    image: "ohif/viewer"
+    volumes:
+      - ./app-config.js:/usr/share/nginx/html/app-config.js
+    ports:
+      - "3000:80"

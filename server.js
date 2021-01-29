@@ -1,8 +1,30 @@
 const fs = require('fs');
+const querystring = require('querystring');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const http = require('http');
-const url = require('url');
+const NodeRSA = require('node-rsa')
+ 
+const SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
+const LOGGED_IN_USER_SUB = process.env.LOGGED_IN_USER_SUB;
+const LOGGED_IN_USER_EMAIL = process.env.LOGGED_IN_USER_EMAIL;
+const LOGGED_IN_USER_NAME = process.env.LOGGED_IN_USER_NAME;
+
+let SERVICE_ACCOUNT_PRIVATE_KEY = undefined;
+let SERVICE_ACCOUNT_EMAIL = undefined;
+console.log(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE);
+if (process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE) {
+    SERVICE_ACCOUNT_PRIVATE_KEY = fs.readFileSync(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE, 'ascii');
+    SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL;
+}
+
+const accessTokenFetcher = async function () {
+    if (SERVICE_ACCOUNT_PRIVATE_KEY) {
+        return getServiceAccountAccessToken();
+    } else {
+        return "supertoken";
+    }
+}
 
 const requestListener = function (request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
@@ -10,22 +32,32 @@ const requestListener = function (request, response) {
     switch (url.pathname) {
       case '/.well-known/openid-configuration':
         return configurationListener(request, response);
-      default:
-        response.writeHead(404, {'Content-Type': 'text/plain'});
-        response.write('404 Not Found\n');
-        response.end();
-        return;
+        case '/auth':
+          return authListener(request, response);
+        case '/token':
+          return tokenListener(request, response);
+        case '/userinfo':
+          return userinfoListener(request, response);
+        default:
+          response.writeHead(404, {'Content-Type': 'text/plain'});
+          response.write('404 Not Found\n');
+          response.end();
     }
 }
 
 const configurationListener = function (request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
+    let issuer = process.env.ISSUER;
+    if (!issuer) {
+        issuer = url.origin;
+    }
+
     const configuration = {
-        issuer: `${url.origin}`,
-        authorization_endpoint: `${url.origin}/auth`,
-        token_endpoint: `${url.origin}/token`,
-        userinfo_endpoint: `${url.origin}/userinfo`,
+        issuer: issuer,
+        authorization_endpoint: `${issuer}/auth`,
+        token_endpoint: `${issuer}/token`,
+        userinfo_endpoint: `${issuer}/userinfo`,
         response_types_supported: [
          'code',
          'token',
@@ -47,45 +79,143 @@ const configurationListener = function (request, response) {
          'email',
          'profile',
         ],
-        'token_endpoint_auth_methods_supported': [
-         'client_secret_post',
-         'client_secret_basic',
-        ],
         claims_supported: [
          'aud',
          'email',
-         'email_verified',
          'exp',
-         'family_name',
-         'given_name',
          'iat',
          'iss',
-         'locale',
          'name',
-         'picture',
          'sub',
-        ],
-        code_challenge_methods_supported: [
-         'plain',
-         'S256',
         ],
         grant_types_supported: [
          'authorization_code',
-         'refresh_token',
-         'urn:ietf:params:oauth:grant-type:device_code',
-         'urn:ietf:params:oauth:grant-type:jwt-bearer',
         ]
-       
     }
 
-    response.writeHead(200, {'Content-Type': 'application/json'});
-
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+    });
 
     response.write(JSON.stringify(configuration, null, 2));
     response.end();
 }
 
+const authListener = function (request, response) {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+
+    const state = url.searchParams.get('state');
+    const code = 'code';
+
+    const redirectUri = new URL(url.searchParams.get('redirect_uri'));
+
+    redirectUri.searchParams.append('code', code);
+    redirectUri.searchParams.append('state', state);
+
+    response.writeHead(302, {
+        'Location': redirectUri.toString(),
+    });
+    response.end();
+}
+
+function readPost(request) {
+    return new Promise ((resolve, reject) => {
+        let body = '';
+        request.on('data', function (data) {
+            body += data;
+        });
+        request.on('end', function () {
+            resolve(querystring.parse(body))
+        });
+        request.on('error', err => {
+            reject(err);
+        });
+    }); 
+}
+  
+const tokenListener = async function (request, response) {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+
+    readPost = function (request) {
+        return new Promise ((resolve, reject) => {
+            let body = '';
+            request.on('data', function (data) {
+                body += data;
+            });
+            request.on('end', function () {
+                resolve(querystring.parse(body))
+            });
+            request.on('error', err => {
+                console.log(err);
+                reject(err);
+            });
+        }); 
+    }
+    const clientId = (await readPost(request))['client_id'];
+
+    let issuer = process.env.ISSUER;
+    if (!issuer) {
+        issuer = url.origin;
+    }
+
+    const idClaims = {
+        iss: issuer,
+        sub: LOGGED_IN_USER_SUB,
+        aud: clientId
+    }
+    const idToken = jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h' });
+  
+    const responseBody = {
+        'access_token': await accessTokenFetcher(),
+        'token_type': "Bearer",
+        'expires_in': 3600,
+        "id_token": idToken,
+    }
+
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-store',
+        'Pragma': 'no-cache',
+    });
+    response.write(JSON.stringify(responseBody, null, 2));
+    response.end();
+}
+
+const userinfoListener = function (request, response) {
+    const userinfo = {
+        sub: LOGGED_IN_USER_SUB,
+        ...(LOGGED_IN_USER_EMAIL && {email: LOGGED_IN_USER_EMAIL}),
+        ...(LOGGED_IN_USER_NAME && {name: LOGGED_IN_USER_NAME}),
+    }
+
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+    });
+    response.write(JSON.stringify(userinfo, null, 2));
+    response.end();
+}
+
+async function getServiceAccountAccessToken() {
+    const authenticationJWT = jwt.sign({
+      scope: 'https://www.googleapis.com/auth/cloud-platform',
+    }, SERVICE_ACCOUNT_PRIVATE_KEY, {
+      algorithm: 'RS256',
+      issuer: SERVICE_ACCOUNT_EMAIL,
+      audience: 'https://oauth2.googleapis.com/token',
+      expiresIn: '5m',
+    });
+  
+    const params = new URLSearchParams();
+    params.append('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer');
+    params.append('assertion', authenticationJWT);
+  
+    return (await axios.post('https://oauth2.googleapis.com/token', params)).data.access_token;
+  }
+
 const server = http.createServer(requestListener);
-server.listen(8085, '0.0.0.0', () => {
+server.listen(8085, () => {
     console.log(`Server is running`);
 });
