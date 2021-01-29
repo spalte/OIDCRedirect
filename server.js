@@ -38,7 +38,7 @@ async function accessTokenFetcher() {
   if (SERVICE_ACCOUNT_PRIVATE_KEY) {
     return getServiceAccountAccessToken();
   }
-  return 'supertoken';
+  return 'super_token';
 }
 
 function requestListener(request, response) {
@@ -148,8 +148,8 @@ async function tokenListener(request, response) {
     });
   }
 
-  const requsetParamaters = await readPost();
-  const clientId = requsetParamaters.client_id;
+  const requestParameters = await readPost();
+  const clientId = requestParameters.client_id;
   const issuer = getIssuer(request);
 
   const idClaims = {
@@ -162,8 +162,8 @@ async function tokenListener(request, response) {
     access_token: await accessTokenFetcher(),
     token_type: 'Bearer',
     expires_in: 30 * 60,
-    ...(requsetParamaters.grant_type === 'authorization_code' && {
-      refresh_token: 'refreshme',
+    ...(requestParameters.grant_type === 'authorization_code' && {
+      refresh_token: 'refresh_me',
       id_token: jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h', keyid: SERVER_JWK_KEY_ID }),
     }),
   };
