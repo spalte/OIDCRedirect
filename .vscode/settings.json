@@ -1,0 +1,8 @@
+{
+    "cSpell.ignorePaths": [
+        ".vscode",
+        "service-account.json",
+        "google_client_secret.txt",
+        "google_refresh_token.txt",
+    ]
+}

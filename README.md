@@ -38,8 +38,8 @@ OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to 
 
 `ISSUER` can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be make to derive it from the request.
 
-If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format.
+If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `service-account.json`.
 
-Alternatively, `GOOGLE_REFRESH_TOKEN_FILE`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET_FILE` can be be specified in which case Access Tokens are obtained by using the refresh token.
+Alternatively, `GOOGLE_REFRESH_TOKEN_FILE`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET_FILE` can be be specified in which case Access Tokens are obtained by using the refresh token. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_client_secret.txt` and `google_refresh_token.txt`.
 
 `LISTEN_PORT` can be used to set what port will be used. Default is 80.

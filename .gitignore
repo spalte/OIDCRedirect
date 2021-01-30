@@ -4,3 +4,5 @@ npm-debug.log
 .env
 .DS_Store
 service-account.json
+google_client_secret.txt
+google_refresh_token.txt
