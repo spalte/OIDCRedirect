@@ -5,7 +5,7 @@ services:
     user: "node"
     ports:
       - "127.0.0.1:8085:80"
-    environment:
+#    environment:
 #      - LOGGED_IN_USER_SUB=12345
 #      - LOGGED_IN_USER_NAME=Joël Spaltenstein
 #      - LOGGED_IN_USER_EMAIL=spalte@naturalimage.ch
