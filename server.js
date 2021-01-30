@@ -16,7 +16,12 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': 86400,
 };
 
-const SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
+let SERVER_PRIVATE_KEY;
+if (process.env.SERVER_PRIVATE_KEY_FILE) {
+  SERVER_PRIVATE_KEY = fs.readFileSync(process.env.SERVER_PRIVATE_KEY_FILE, 'ascii');
+} else {
+  SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
+}
 const SERVER_JWK = pem2jwk(SERVER_PRIVATE_KEY);
 const SERVER_JWK_KEY_ID = '0';
 
@@ -39,7 +44,16 @@ let GOOGLE_REFRESH_TOKEN;
 let GOOGLE_ID_TOKEN_CLAIMS;
 let GOOGLE_CLIENT_SECRET;
 
-if (process.env.GOOGLE_CLIENT_SECRET_FILE) {
+if (process.env.GOOGLE_ID_TOKEN_FILE) {
+  if (!process.env.GOOGLE_REFRESH_TOKEN_FILE) {
+    console.log('Environment variable var GOOGLE_REFRESH_TOKEN_FILE must be defined if GOOGLE_ID_TOKEN_FILE is defined');
+    process.exit(1);
+  }
+  if (!process.env.GOOGLE_CLIENT_SECRET_FILE) {
+    console.log('Environment variable GOOGLE_CLIENT_SECRET_FILE must be defined if GOOGLE_ID_TOKEN_FILE is defined');
+    process.exit(1);
+  }
+
   const {
     // eslint-disable-next-line camelcase
     iss, azp, at_hash, iat, exp, ...userClaims
@@ -54,7 +68,7 @@ async function accessTokenFetcher() {
     return getServiceAccountAccessToken();
   }
 
-  if (GOOGLE_REFRESH_TOKEN) {
+  if (GOOGLE_ID_TOKEN_CLAIMS) {
     return refreshAccessToken();
   }
 

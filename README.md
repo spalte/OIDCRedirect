@@ -36,7 +36,9 @@ OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to 
 
 `LOGGED_IN_USER_EMAIL` *Optional* Overwrites the `email` in the returned `id_token` and response to `userinfo`.
 
-`ISSUER` can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be make to derive it from the request.
+`ISSUER` *Optional* Can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be made to derive it from the request.
+
+`SERVER_PRIVATE_KEY_FILE` *Optional* Can be specified to provide the key the server will use to sign the returned `id_token`. If this is not specified, a new private key will be generated at startup.
 
 If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `service-account.json`.
 

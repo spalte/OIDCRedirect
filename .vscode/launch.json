@@ -12,6 +12,7 @@
 //                "LOGGED_IN_USER_NAME": "Joël Spaltenstein",
 //                "LOGGED_IN_USER_EMAIL": "debugger@naturalimage.ch",
 //                "GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE": "service-account.json",
+//                "SERVER_PRIVATE_KEY_FILE": "server_private_key.pem",
                 "GOOGLE_ID_TOKEN_FILE": "google_id_token.txt",
                 "GOOGLE_REFRESH_TOKEN_FILE": "google_refresh_token.txt",
                 "GOOGLE_CLIENT_SECRET_FILE": "google_client_secret.txt",
