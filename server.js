@@ -196,14 +196,14 @@ async function configurationListener(request, response) {
 
 async function authListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
-
   const state = url.searchParams.get('state');
-  const code = 'code';
 
   const redirectUri = new URL(url.searchParams.get('redirect_uri'));
 
-  redirectUri.searchParams.append('code', code);
-  redirectUri.searchParams.append('state', state);
+  redirectUri.searchParams.append('code', 'code');
+  if (state) {
+    redirectUri.searchParams.append('state', state);
+  }
 
   response.writeHead(302, {
     Location: redirectUri.toString(),
