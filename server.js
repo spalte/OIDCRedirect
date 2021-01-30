@@ -27,6 +27,8 @@ const SERVER_JWK_KEY_ID = '0';
 
 const DEFAULT_SUBJECT = 'default_subject';
 
+const REFRESH_TOKEN = 'refresh_me';
+
 const { LOGGED_IN_USER_SUB } = process.env;
 const { LOGGED_IN_USER_EMAIL } = process.env;
 const { LOGGED_IN_USER_NAME } = process.env;
@@ -210,7 +212,7 @@ async function tokenListener(request, response) {
     token_type: accessTokenData.token_type,
     expires_in: accessTokenData.expires_in,
     ...(requestParameters.grant_type === 'authorization_code' && {
-      refresh_token: 'refresh_me',
+      refresh_token: REFRESH_TOKEN,
       id_token: jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h', keyid: SERVER_JWK_KEY_ID }),
     }),
   };
@@ -266,10 +268,12 @@ async function certsListener(request, response) {
 
 async function introspectListener(request, response) {
   let introspectBody;
-  if (GOOGLE_SERVICE_ACCOUNT || GOOGLE_ID_TOKEN_CLAIMS) {
-    const postBody = await readPost(request);
+  const { token } = await readPost(request);
+  if (token === REFRESH_TOKEN) {
+    introspectBody = { active: true };
+  } else if (GOOGLE_SERVICE_ACCOUNT || GOOGLE_ID_TOKEN_CLAIMS) {
     try {
-      const tokenResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?access_token=${postBody.token}`);
+      const tokenResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
       introspectBody = {
         ...tokenResponse.data,
         active: true,
@@ -278,7 +282,6 @@ async function introspectListener(request, response) {
       delete introspectBody.aud;
       delete introspectBody.azp;
     } catch (error) {
-      console.log(error);
       introspectBody = { active: false };
     }
   } else {
