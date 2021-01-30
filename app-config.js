@@ -13,7 +13,7 @@ window.config = {
       client_id: 'ohif-viewer',
       redirect_uri: 'http://127.0.0.1:3000/callback', // `OHIFStandaloneViewer.js`
       response_type: 'code', // "Authorization Code Flow"
-      scope: 'openid', // email profile openid
+      scope: 'openid email profile offline_access', // email profile openid
       // ~ OPTIONAL
       post_logout_redirect_uri: '/logout-redirect.html',
     },
