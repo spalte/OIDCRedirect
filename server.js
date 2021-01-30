@@ -185,7 +185,6 @@ async function tokenListener(request, response) {
         resolve(querystring.parse(body));
       });
       request.on('error', (err) => {
-        console.log(err);
         reject(err);
       });
     });
@@ -312,4 +311,7 @@ function getIssuer(request) {
 const server = http.createServer(requestListener);
 server.listen(LISTEN_PORT, () => {
   console.log('Server is running');
+});
+server.on('error', (error) => {
+  console.log(error);
 });
