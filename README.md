@@ -2,7 +2,7 @@
 
 OIDC Redirect is a small Node server that allows [OHIF](https://ohif.org), or other OIDC enabled apps, running on a host that has already been authenticated by some other means (ie. local login, VM displayed only to an authenticated user, etc.) to immediately connect to a Google Cloud Healthcare PACS. OIDC Redirect will use environment variables to determine the logged-in user.
 
-The server is meant to be run and bound to the loopback address (127.0.0.1) of authenticated host. The server will blindly return tokens to any callers.
+The server is meant to be run and bound to the loopback address (127.0.0.1) of an authenticated host. The server will blindly return tokens to any callers.
 
 The server could be made accessible only to a specific subnet in order to allow access for all users on that subnet – although some additional hardening would be appropriate. Please contact me at [spalte@naturalimage.ch](mailto:spalte@naturalimage.ch) if you are interested in this use case.
 
