@@ -65,41 +65,51 @@ async function accessTokenFetcher() {
 }
 
 function requestListener(request, response) {
-  const url = new URL(request.url, `http://${request.headers.host}`);
+  (async function selectPath() {
+    const url = new URL(request.url, `http://${request.headers.host}`);
 
-  if (request.method === 'OPTIONS') {
-    response.writeHead(204, CORS_HEADERS);
-    response.end();
-    return;
-  }
-
-  switch (url.pathname) {
-    case '/.well-known/openid-configuration':
-      configurationListener(request, response);
-      break;
-    case '/auth':
-      authListener(request, response);
-      break;
-    case '/token':
-      tokenListener(request, response);
-      break;
-    case '/userinfo':
-      userinfoListener(request, response);
-      break;
-    case '/certs':
-      certsListener(request, response);
-      break;
-    default:
-      response.writeHead(404, {
-        'Content-Type': 'text/plain',
-        ...CORS_HEADERS,
-      });
-      response.write('404 Not Found\n');
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204, CORS_HEADERS);
       response.end();
-  }
+      return;
+    }
+
+    switch (url.pathname) {
+      case '/.well-known/openid-configuration':
+        await configurationListener(request, response);
+        break;
+      case '/auth':
+        await authListener(request, response);
+        break;
+      case '/token':
+        await tokenListener(request, response);
+        break;
+      case '/userinfo':
+        await userinfoListener(request, response);
+        break;
+      case '/certs':
+        await certsListener(request, response);
+        break;
+      default:
+        response.writeHead(404, {
+          'Content-Type': 'text/plain',
+          ...CORS_HEADERS,
+        });
+        response.write('404 Not Found\n');
+        response.end();
+    }
+  }()).catch((error) => {
+    console.log(error);
+    response.writeHead(500, {
+      'Content-Type': 'text/plain',
+      ...CORS_HEADERS,
+    });
+    response.write('500 Server Error\n');
+    response.end();
+  });
 }
 
-function configurationListener(request, response) {
+async function configurationListener(request, response) {
   const issuer = getIssuer(request);
 
   const configuration = {
@@ -146,7 +156,7 @@ function configurationListener(request, response) {
   response.end();
 }
 
-function authListener(request, response) {
+async function authListener(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   const state = url.searchParams.get('state');
@@ -213,7 +223,7 @@ async function tokenListener(request, response) {
   response.end();
 }
 
-function userinfoListener(request, response) {
+async function userinfoListener(request, response) {
   const userinfo = {
     sub: LOGGED_IN_USER_SUB,
     ...(LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL }),
@@ -228,7 +238,7 @@ function userinfoListener(request, response) {
   response.end();
 }
 
-function certsListener(request, response) {
+async function certsListener(request, response) {
   const keys = [{
     n: SERVER_JWK.n,
     e: SERVER_JWK.e,
