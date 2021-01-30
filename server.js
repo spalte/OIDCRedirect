@@ -94,7 +94,7 @@ async function accessTokenFetcher() {
   }
 
   if (GOOGLE_ID_TOKEN_CLAIMS) {
-    return refreshAccessToken();
+    return getRefreshAccessToken();
   }
 
   return getStaticAccessToken();
@@ -348,7 +348,7 @@ async function getServiceAccountAccessToken() {
   return (await axios.post('https://oauth2.googleapis.com/token', params)).data;
 }
 
-async function refreshAccessToken() {
+async function getRefreshAccessToken() {
   const params = new URLSearchParams();
   params.append('grant_type', 'refresh_token');
   params.append('refresh_token', GOOGLE_REFRESH_TOKEN);
