@@ -88,7 +88,7 @@ if (GOOGLE_ID_TOKEN) {
   GOOGLE_ID_TOKEN_CLAIMS = { ...userClaims };
 }
 
-async function accessTokenFetcher() {
+async function fetchAccessToken() {
   if (GOOGLE_SERVICE_ACCOUNT) {
     return getServiceAccountAccessToken();
   }
@@ -228,7 +228,7 @@ async function tokenListener(request, response) {
   Object.assign(idClaims, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
   Object.assign(idClaims, { ...!idClaims.sub && { sub: DEFAULT_SUBJECT } });
 
-  const accessTokenData = await accessTokenFetcher();
+  const accessTokenData = await fetchAccessToken();
 
   const responseBody = {
     access_token: accessTokenData.access_token,
