@@ -24,22 +24,22 @@ Once launched you should be able to open OHIF locally.
 http://127.0.0.1:3000
 ```
 
-OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to the open `server.dcmjs.org` DICOMweb server as directed in the app-config.js configuration file. If you inspect the network connection though, you will note that an `Authorization` HTTP header has been added (default "super_token"). In order to point to a Google Cloud Healthcare PACS, modify WADO-RS URIs in the app-config.js file that is passed to OHIF.
+OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to the open `server.dcmjs.org` DICOMweb server as directed in the app-config.js configuration file. If you inspect the network connection though, you will note that an `Authorization` HTTP header has been added (default "default_access_token"). In order to point to a Google Cloud Healthcare PACS, modify WADO-RS URIs in the app-config.js file that is passed to OHIF.
 
 ---
 
 ## Environment variables
 
-`LOGGED_IN_USER_SUB` must be defined.
+`LOGGED_IN_USER_SUB` *Optional* Overwrites the `sub` in the returned `id_token` and response to `userinfo`.
 
-`LOGGED_IN_USER_NAME` will be returned by the userinfo endpoint if defined.
+`LOGGED_IN_USER_NAME` *Optional* Overwrites the `name` in the returned `id_token` and response to `userinfo`.
 
-`LOGGED_IN_USER_EMAIL` will be returned by the userinfo endpoint if defined.
+`LOGGED_IN_USER_EMAIL` *Optional* Overwrites the `email` in the returned `id_token` and response to `userinfo`.
 
 `ISSUER` can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be make to derive it from the request.
 
 If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `service-account.json`.
 
-Alternatively, `GOOGLE_REFRESH_TOKEN_FILE`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET_FILE` can be be specified in which case Access Tokens are obtained by using the refresh token. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_client_secret.txt` and `google_refresh_token.txt`.
+Alternatively, `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOGLE_CLIENT_SECRET_FILE` can be be specified in which case Access Tokens are obtained by using the refresh token. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_id_token.txt`, `google_refresh_token.txt`, and `google_client_secret.txt`.
 
 `LISTEN_PORT` can be used to set what port will be used. Default is 80.

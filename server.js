@@ -20,19 +20,13 @@ const SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-priv
 const SERVER_JWK = pem2jwk(SERVER_PRIVATE_KEY);
 const SERVER_JWK_KEY_ID = '0';
 
+const DEFAULT_SUBJECT = 'default_subject';
+
 const { LOGGED_IN_USER_SUB } = process.env;
 const { LOGGED_IN_USER_EMAIL } = process.env;
 const { LOGGED_IN_USER_NAME } = process.env;
 
-if (!LOGGED_IN_USER_SUB) {
-  console.log('env var LOGGED_IN_USER_SUB is required but is not defined');
-}
-
-let { LISTEN_PORT } = process.env;
-if (!LISTEN_PORT) {
-  LISTEN_PORT = 80;
-}
-LISTEN_PORT = Number(LISTEN_PORT);
+const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
 
 let GOOGLE_SERVICE_ACCOUNT;
 if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE) {
@@ -42,13 +36,17 @@ if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE) {
 }
 
 let GOOGLE_REFRESH_TOKEN;
-let GOOGLE_CLIENT_ID;
+let GOOGLE_ID_TOKEN_CLAIMS;
 let GOOGLE_CLIENT_SECRET;
 
 if (process.env.GOOGLE_CLIENT_SECRET_FILE) {
+  const {
+    // eslint-disable-next-line camelcase
+    iss, azp, at_hash, iat, exp, ...userClaims
+  } = jwt.decode(fs.readFileSync(process.env.GOOGLE_ID_TOKEN_FILE, 'ascii').trim());
+  GOOGLE_ID_TOKEN_CLAIMS = { ...userClaims };
   GOOGLE_REFRESH_TOKEN = fs.readFileSync(process.env.GOOGLE_REFRESH_TOKEN_FILE, 'ascii').trim();
   GOOGLE_CLIENT_SECRET = fs.readFileSync(process.env.GOOGLE_CLIENT_SECRET_FILE, 'ascii').trim();
-  GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 }
 
 async function accessTokenFetcher() {
@@ -195,9 +193,12 @@ async function tokenListener(request, response) {
 
   const idClaims = {
     iss: issuer,
-    sub: LOGGED_IN_USER_SUB,
     aud: clientId,
   };
+
+  Object.assign(idClaims, { ...GOOGLE_ID_TOKEN_CLAIMS && { sub: GOOGLE_ID_TOKEN_CLAIMS.sub } });
+  Object.assign(idClaims, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
+  Object.assign(idClaims, { ...!idClaims.sub && { sub: DEFAULT_SUBJECT } });
 
   const accessTokenData = await accessTokenFetcher();
 
@@ -222,11 +223,17 @@ async function tokenListener(request, response) {
 }
 
 async function userinfoListener(request, response) {
-  const userinfo = {
-    sub: LOGGED_IN_USER_SUB,
-    ...(LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL }),
-    ...(LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME }),
-  };
+  const userinfo = {};
+
+  if (GOOGLE_ID_TOKEN_CLAIMS) {
+    Object.assign(userinfo, GOOGLE_ID_TOKEN_CLAIMS);
+    delete userinfo.aud;
+  }
+
+  Object.assign(userinfo, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
+  Object.assign(userinfo, { ...LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL } });
+  Object.assign(userinfo, { ...LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME } });
+  Object.assign(userinfo, { ...!userinfo.sub && { sub: DEFAULT_SUBJECT } });
 
   response.writeHead(200, {
     'Content-Type': 'application/json',
@@ -256,7 +263,7 @@ async function certsListener(request, response) {
 
 async function getStaticAccessToken() {
   return Promise.resolve({
-    access_token: 'super_token',
+    access_token: 'default_access_token',
     token_type: 'Bearer',
     expires_in: 60 * 60,
   });
@@ -287,7 +294,7 @@ async function refreshAccessToken() {
 
   return (await axios.post('https://oauth2.googleapis.com/token', params, {
     auth: {
-      username: GOOGLE_CLIENT_ID,
+      username: GOOGLE_ID_TOKEN_CLAIMS.aud,
       password: GOOGLE_CLIENT_SECRET,
     },
   })).data;

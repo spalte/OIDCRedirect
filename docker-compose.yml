@@ -5,16 +5,16 @@ services:
     user: "node"
     ports:
       - "127.0.0.1:8085:80"
-    environment:
-      - LOGGED_IN_USER_SUB=123456
-      - LOGGED_IN_USER_NAME=Joël Spaltenstein
-      - LOGGED_IN_USER_EMAIL=spalte@naturalimage.ch
+#    environment:
+#      - LOGGED_IN_USER_NAME=Joël Spaltenstein
+#      - LOGGED_IN_USER_EMAIL=spalte@naturalimage.ch
 #      - GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE=/app/service_account.json
-#      - GOOGLE_CLIENT_ID=my_client_id
+#      - GOOGLE_ID_TOKEN_FILE=/app/google_id_token.txt
 #      - GOOGLE_REFRESH_TOKEN_FILE=/app/google_refresh_token.txt
 #      - GOOGLE_CLIENT_SECRET_FILE=/app/google_client_secret.txt
 #    volumes:
 #      - ./service_account.json:/app/service_account.json
+#      - ./google_id_token.txt:/app/google_id_token.txt
 #      - ./google_refresh_token.txt:/app/google_refresh_token.txt
 #      - ./google_client_secret.txt:/app/google_client_secret.txt
   ohif:
