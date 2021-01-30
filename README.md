@@ -16,7 +16,7 @@ Run:
 docker-compose up --build
 ```
 
-This will build the OIDC redirect image, and launch it (port 8085) along with OHIF (port 3000).
+This will build the OIDC Redirect image, and launch it (port 8085) along with OHIF (port 3000).
 
 Once launched you should be able to open OHIF locally.
 
