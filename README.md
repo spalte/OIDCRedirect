@@ -40,8 +40,8 @@ OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to 
 
 `SERVER_PRIVATE_KEY_FILE` *Optional* Can be specified to provide the key the server will use to sign the returned `id_token`. If this is not specified, a new private key will be generated at startup. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `server_private_key.pem`.
 
-If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `service-account.json`.
+If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named `service-account.json`.
 
-Alternatively, `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOGLE_CLIENT_SECRET_FILE` are defined, an Access Token obtained by using the refresh token will be returned. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_id_token.txt`, `google_refresh_token.txt`, and `google_client_secret.txt`.
+Alternatively, if `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOGLE_CLIENT_SECRET_FILE` are defined, an Access Token obtained by using the refresh token will be returned. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_id_token.txt`, `google_refresh_token.txt`, and `google_client_secret.txt`.
 
 `LISTEN_PORT` can be used to set what port will be used. Default is 80.
