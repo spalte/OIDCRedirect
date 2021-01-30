@@ -101,6 +101,9 @@ function requestListener(request, response) {
       case '/certs':
         await certsListener(request, response);
         break;
+      case '/introspect':
+        await introspectListener(request, response);
+        break;
       default:
         response.writeHead(404, {
           'Content-Type': 'text/plain',
@@ -128,6 +131,7 @@ async function configurationListener(request, response) {
     authorization_endpoint: `${issuer}/auth`,
     token_endpoint: `${issuer}/token`,
     userinfo_endpoint: `${issuer}/userinfo`,
+    introspection_endpoint: `${issuer}/introspect`,
     jwks_uri: `${issuer}/certs`,
     response_types_supported: [
       'code',
@@ -186,22 +190,7 @@ async function authListener(request, response) {
 }
 
 async function tokenListener(request, response) {
-  function readPost() {
-    return new Promise((resolve, reject) => {
-      let body = '';
-      request.on('data', (data) => {
-        body += data;
-      });
-      request.on('end', () => {
-        resolve(querystring.parse(body));
-      });
-      request.on('error', (err) => {
-        reject(err);
-      });
-    });
-  }
-
-  const requestParameters = await readPost();
+  const requestParameters = await readPost(request);
   const clientId = requestParameters.client_id;
   const issuer = getIssuer(request);
 
@@ -275,6 +264,39 @@ async function certsListener(request, response) {
   response.end();
 }
 
+async function introspectListener(request, response) {
+  let introspectBody;
+  if (GOOGLE_SERVICE_ACCOUNT || GOOGLE_ID_TOKEN_CLAIMS) {
+    const postBody = await readPost(request);
+    try {
+      const tokenResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?access_token=${postBody.token}`);
+      introspectBody = {
+        ...tokenResponse.data,
+        active: true,
+      };
+      introspectBody.iss = getIssuer(request);
+      delete introspectBody.aud;
+      delete introspectBody.azp;
+    } catch (error) {
+      console.log(error);
+      introspectBody = { active: false };
+    }
+  } else {
+    introspectBody = { active: true };
+  }
+
+  Object.assign(introspectBody, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
+  Object.assign(introspectBody, { ...LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL } });
+  Object.assign(introspectBody, { ...LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME } });
+
+  response.writeHead(200, {
+    'Content-Type': 'application/json',
+    ...CORS_HEADERS,
+  });
+  response.write(JSON.stringify(introspectBody, null, 2));
+  response.end();
+}
+
 async function getStaticAccessToken() {
   return Promise.resolve({
     access_token: 'default_access_token',
@@ -312,6 +334,21 @@ async function refreshAccessToken() {
       password: GOOGLE_CLIENT_SECRET,
     },
   })).data;
+}
+
+function readPost(request) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    request.on('data', (data) => {
+      body += data;
+    });
+    request.on('end', () => {
+      resolve(querystring.parse(body));
+    });
+    request.on('error', (err) => {
+      reject(err);
+    });
+  });
 }
 
 function getIssuer(request) {
