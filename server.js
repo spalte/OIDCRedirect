@@ -66,18 +66,20 @@ const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
 const GOOGLE_SERVICE_ACCOUNT = GOOGLE_SERVICE_ACCOUNT_CREDENTIAL
   && JSON.parse(GOOGLE_SERVICE_ACCOUNT_CREDENTIAL);
 
+if (!((GOOGLE_ID_TOKEN && GOOGLE_REFRESH_TOKEN && GOOGLE_CLIENT_SECRET)
+  || (!GOOGLE_ID_TOKEN && !GOOGLE_REFRESH_TOKEN && !GOOGLE_CLIENT_SECRET))) {
+  console.log('GOOGLE_ID_TOKEN, GOOGLE_REFRESH_TOKEN, and GOOGLE_CLIENT_SECRET must either all be defined or none must be defined');
+  process.exit(1);
+}
+
+if (GOOGLE_SERVICE_ACCOUNT_CREDENTIAL && GOOGLE_ID_TOKEN) {
+  console.log('Either use a GOOGLE_SERVICE_ACCOUNT_CREDENTIAL or a refresh token combination');
+  process.exit(1);
+}
+
 let GOOGLE_ID_TOKEN_CLAIMS;
 
 if (GOOGLE_ID_TOKEN) {
-  if (!GOOGLE_REFRESH_TOKEN) {
-    console.log('Environment variable var GOOGLE_REFRESH_TOKEN must be defined if GOOGLE_ID_TOKEN is defined');
-    process.exit(1);
-  }
-  if (!GOOGLE_CLIENT_SECRET) {
-    console.log('Environment variable GOOGLE_CLIENT_SECRET must be defined if GOOGLE_ID_TOKEN is defined');
-    process.exit(1);
-  }
-
   const {
   // eslint-disable-next-line camelcase
     iss, azp, at_hash, iat, exp, ...userClaims
