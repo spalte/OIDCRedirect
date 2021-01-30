@@ -30,11 +30,11 @@ OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to 
 
 ## Environment variables
 
-`LOGGED_IN_USER_SUB` *Optional* Overwrites the `sub` in the returned `id_token` and response to `userinfo` and `instrospect`.
+`LOGGED_IN_USER_SUB` *Optional* Overwrites the `sub` in the returned `id_token` and response to `userinfo` and `introspect`.
 
-`LOGGED_IN_USER_NAME` *Optional* Overwrites the `name` in the returned `id_token` and response to `userinfo` and `instrospect`.
+`LOGGED_IN_USER_NAME` *Optional* Overwrites the `name` in the returned `id_token` and response to `userinfo` and `introspect`.
 
-`LOGGED_IN_USER_EMAIL` *Optional* Overwrites the `email` in the returned `id_token` and response to `userinfo` and `instrospect`.
+`LOGGED_IN_USER_EMAIL` *Optional* Overwrites the `email` in the returned `id_token` and response to `userinfo` and `introspect`.
 
 `ISSUER` *Optional* Can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be made to derive it from the request.
 
