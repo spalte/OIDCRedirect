@@ -34,12 +34,11 @@ if (!LISTEN_PORT) {
 }
 LISTEN_PORT = Number(LISTEN_PORT);
 
-let SERVICE_ACCOUNT_PRIVATE_KEY;
-let SERVICE_ACCOUNT_EMAIL;
-
-if (process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE) {
-  SERVICE_ACCOUNT_PRIVATE_KEY = fs.readFileSync(process.env.SERVICE_ACCOUNT_PRIVATE_KEY_FILE, 'ascii').trim();
-  SERVICE_ACCOUNT_EMAIL = process.env.SERVICE_ACCOUNT_EMAIL;
+let GOOGLE_SERVICE_ACCOUNT;
+if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE) {
+  GOOGLE_SERVICE_ACCOUNT = JSON.parse(
+    fs.readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE, 'ascii'),
+  );
 }
 
 let GOOGLE_REFRESH_TOKEN;
@@ -53,7 +52,7 @@ if (process.env.GOOGLE_CLIENT_SECRET_FILE) {
 }
 
 async function accessTokenFetcher() {
-  if (SERVICE_ACCOUNT_PRIVATE_KEY) {
+  if (GOOGLE_SERVICE_ACCOUNT) {
     return getServiceAccountAccessToken();
   }
 
@@ -266,10 +265,10 @@ async function getStaticAccessToken() {
 async function getServiceAccountAccessToken() {
   const authenticationJWT = jwt.sign({
     scope: 'https://www.googleapis.com/auth/cloud-platform',
-  }, SERVICE_ACCOUNT_PRIVATE_KEY, {
+  }, GOOGLE_SERVICE_ACCOUNT.private_key, {
     algorithm: 'RS256',
-    issuer: SERVICE_ACCOUNT_EMAIL,
-    audience: 'https://oauth2.googleapis.com/token',
+    issuer: GOOGLE_SERVICE_ACCOUNT.client_email,
+    audience: GOOGLE_SERVICE_ACCOUNT.token_uri,
     expiresIn: '5m',
   });
 
