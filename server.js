@@ -16,10 +16,38 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': 86400,
 };
 
-let SERVER_PRIVATE_KEY;
-if (process.env.SERVER_PRIVATE_KEY_FILE) {
-  SERVER_PRIVATE_KEY = fs.readFileSync(process.env.SERVER_PRIVATE_KEY_FILE, 'ascii');
-} else {
+const {
+  SERVER_PRIVATE_KEY_FILE,
+  GOOGLE_SERVICE_ACCOUNT_CREDENTIAL,
+  GOOGLE_REFRESH_TOKEN_FILE,
+  GOOGLE_CLIENT_SECRET_FILE,
+  GOOGLE_ID_TOKEN_FILE,
+  LOGGED_IN_USER_SUB,
+  LOGGED_IN_USER_EMAIL,
+  LOGGED_IN_USER_NAME,
+} = process.env;
+
+let {
+  SERVER_PRIVATE_KEY,
+  GOOGLE_ID_TOKEN,
+  GOOGLE_REFRESH_TOKEN,
+  GOOGLE_CLIENT_SECRET,
+} = process.env;
+
+if (SERVER_PRIVATE_KEY_FILE) {
+  SERVER_PRIVATE_KEY = fs.readFileSync(SERVER_PRIVATE_KEY_FILE, 'ascii');
+}
+if (GOOGLE_ID_TOKEN_FILE) {
+  GOOGLE_ID_TOKEN = fs.readFileSync(GOOGLE_ID_TOKEN_FILE, 'ascii').trim();
+}
+if (GOOGLE_REFRESH_TOKEN_FILE) {
+  GOOGLE_REFRESH_TOKEN = fs.readFileSync(GOOGLE_REFRESH_TOKEN_FILE, 'ascii').trim();
+}
+if (GOOGLE_CLIENT_SECRET_FILE) {
+  GOOGLE_CLIENT_SECRET = fs.readFileSync(GOOGLE_CLIENT_SECRET_FILE, 'ascii').trim();
+}
+
+if (!SERVER_PRIVATE_KEY) {
   SERVER_PRIVATE_KEY = new NodeRSA().generateKeyPair().exportKey('pkcs1-private-pem');
 }
 const SERVER_JWK = pem2jwk(SERVER_PRIVATE_KEY);
@@ -29,40 +57,29 @@ const DEFAULT_SUBJECT = 'default_subject';
 
 const REFRESH_TOKEN = 'refresh_me';
 
-const { LOGGED_IN_USER_SUB } = process.env;
-const { LOGGED_IN_USER_EMAIL } = process.env;
-const { LOGGED_IN_USER_NAME } = process.env;
-
 const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
 
-let GOOGLE_SERVICE_ACCOUNT;
-if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE) {
-  GOOGLE_SERVICE_ACCOUNT = JSON.parse(
-    fs.readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE, 'ascii'),
-  );
-}
+const GOOGLE_SERVICE_ACCOUNT = GOOGLE_SERVICE_ACCOUNT_CREDENTIAL
+  && JSON.parse(GOOGLE_SERVICE_ACCOUNT_CREDENTIAL);
 
-let GOOGLE_REFRESH_TOKEN;
 let GOOGLE_ID_TOKEN_CLAIMS;
-let GOOGLE_CLIENT_SECRET;
 
-if (process.env.GOOGLE_ID_TOKEN_FILE) {
-  if (!process.env.GOOGLE_REFRESH_TOKEN_FILE) {
-    console.log('Environment variable var GOOGLE_REFRESH_TOKEN_FILE must be defined if GOOGLE_ID_TOKEN_FILE is defined');
+if (GOOGLE_ID_TOKEN) {
+  if (!GOOGLE_REFRESH_TOKEN) {
+    console.log('Environment variable var GOOGLE_REFRESH_TOKEN must be defined if GOOGLE_ID_TOKEN is defined');
     process.exit(1);
   }
-  if (!process.env.GOOGLE_CLIENT_SECRET_FILE) {
-    console.log('Environment variable GOOGLE_CLIENT_SECRET_FILE must be defined if GOOGLE_ID_TOKEN_FILE is defined');
+  if (!GOOGLE_CLIENT_SECRET) {
+    console.log('Environment variable GOOGLE_CLIENT_SECRET must be defined if GOOGLE_ID_TOKEN is defined');
     process.exit(1);
   }
 
   const {
-    // eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
     iss, azp, at_hash, iat, exp, ...userClaims
-  } = jwt.decode(fs.readFileSync(process.env.GOOGLE_ID_TOKEN_FILE, 'ascii').trim());
+  } = jwt.decode(GOOGLE_ID_TOKEN);
+
   GOOGLE_ID_TOKEN_CLAIMS = { ...userClaims };
-  GOOGLE_REFRESH_TOKEN = fs.readFileSync(process.env.GOOGLE_REFRESH_TOKEN_FILE, 'ascii').trim();
-  GOOGLE_CLIENT_SECRET = fs.readFileSync(process.env.GOOGLE_CLIENT_SECRET_FILE, 'ascii').trim();
 }
 
 async function accessTokenFetcher() {

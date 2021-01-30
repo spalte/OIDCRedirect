@@ -45,3 +45,13 @@ If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired
 Alternatively, if `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOGLE_CLIENT_SECRET_FILE` are defined, an Access Token obtained by using the refresh token will be returned. The commented out values in the `docker-compose.yml` rely on the presence of files that must be created and named `google_id_token.txt`, `google_refresh_token.txt`, and `google_client_secret.txt`.
 
 `LISTEN_PORT` can be used to set what port will be used. Default is 80.
+
+`SERVER_PRIVATE_KEY` can be used to specify the server private key directly;
+
+`GOOGLE_SERVICE_ACCOUNT_CREDENTIAL` can be used to specify the service account credential JSON object directly;
+
+`GOOGLE_ID_TOKEN` can be used to specify the Google id_token directly;
+
+`GOOGLE_REFRESH_TOKEN` can be used to specify the Google refresh_token directly;
+
+`GOOGLE_CLIENT_SECRET` can be used to specify the Google client secret directly;
