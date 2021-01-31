@@ -172,6 +172,7 @@ async function configurationListener(request, response) {
       'openid',
       'email',
       'profile',
+      'offline_access',
     ],
     claims_supported: [
       'aud',
@@ -318,6 +319,8 @@ async function introspectListener(request, response) {
       introspectBody.token_type = 'access_token';
       delete introspectBody.aud;
       delete introspectBody.azp;
+      delete introspectBody.expires_in;
+      delete introspectBody.access_type;
     } catch (error) {
       introspectBody = { active: false };
     }
@@ -331,9 +334,9 @@ async function introspectListener(request, response) {
   Object.assign(introspectBody, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
   Object.assign(introspectBody, { ...LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL } });
   Object.assign(introspectBody, { ...LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME } });
-
   if (introspectBody.scope) {
     introspectBody.scope = introspectBody.scope.replace(/https:\/\/www\.googleapis\.com\/auth\/userinfo\./g, '');
+    introspectBody.scope = introspectBody.scope.concat(' offline_access');
   }
 
   response.writeHead(200, {
