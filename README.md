@@ -24,7 +24,7 @@ Once launched you should be able to open OHIF locally.
 http://127.0.0.1:3000
 ```
 
-OHIF will open, initiate an OIDC session with the OIDC Redirect, and connect to the open `server.dcmjs.org` DICOMweb server as directed in the app-config.js configuration file. If you inspect the network connection though, you will note that an `Authorization` HTTP header has been added (default "default_access_token"). In order to point to a Google Cloud Healthcare PACS, modify WADO-RS URIs in the app-config.js file that is passed to OHIF.
+OHIF will open, initiate an OIDC flow with the OIDC Redirect, and connect to the open `server.dcmjs.org` DICOMweb server as directed in the app-config.js configuration file. If you inspect the network connection though, you will note that an `Authorization` HTTP header has been added (default "default_access_token"). In order to point to a Google Cloud Healthcare PACS, modify WADO-RS URIs in the app-config.js file that is passed to OHIF.
 
 ---
 
