@@ -25,6 +25,7 @@ const {
   LOGGED_IN_USER_SUB,
   LOGGED_IN_USER_EMAIL,
   LOGGED_IN_USER_NAME,
+  ISSUER,
 } = process.env;
 
 let {
@@ -380,7 +381,7 @@ function readPost(request) {
 function getIssuer(request) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
-  let issuer = process.env.ISSUER;
+  let issuer = ISSUER;
   if (!issuer) {
     if (request.headers['x-forwarded-host']) {
       issuer = `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`;
