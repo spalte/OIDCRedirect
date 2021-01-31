@@ -46,12 +46,12 @@ Alternatively, if `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOG
 
 `LISTEN_PORT` can be used to set what port will be used. Default is 80.
 
-`SERVER_PRIVATE_KEY` can be used to specify the server private key directly;
+`SERVER_PRIVATE_KEY` can be used to specify the server private key directly.
 
-`GOOGLE_SERVICE_ACCOUNT_CREDENTIAL` can be used to specify the service account credential JSON object directly;
+`GOOGLE_SERVICE_ACCOUNT_CREDENTIAL` can be used to specify the service account credential JSON object directly.
 
-`GOOGLE_ID_TOKEN` can be used to specify the Google id_token directly;
+`GOOGLE_ID_TOKEN` can be used to specify the Google id_token directly.
 
-`GOOGLE_REFRESH_TOKEN` can be used to specify the Google refresh_token directly;
+`GOOGLE_REFRESH_TOKEN` can be used to specify the Google refresh_token directly.
 
-`GOOGLE_CLIENT_SECRET` can be used to specify the Google client secret directly;
+`GOOGLE_CLIENT_SECRET` can be used to specify the Google client secret directly.
