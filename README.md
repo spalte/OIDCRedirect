@@ -36,7 +36,7 @@ OHIF will open and initiate an OIDC flow with the OIDC Redirect server and conne
 
 `LOGGED_IN_USER_EMAIL` *Optional* Overwrites the `email` claim in the returned `id_token` and responses to `userinfo` and `introspect`.
 
-`ISSUER` *Optional* Can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be made to derive it from the request.
+`ISSUER` *Optional* Can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be made to derive the issuer from the request.
 
 `SERVER_PRIVATE_KEY_FILE` *Optional* Can be specified to provide the key the server will use to sign the returned `id_token`. If this is not specified, a new private key will be generated at startup. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `server_private_key.pem`.
 
