@@ -316,6 +316,10 @@ async function introspectListener(request, response) {
   Object.assign(introspectBody, { ...LOGGED_IN_USER_EMAIL && { email: LOGGED_IN_USER_EMAIL } });
   Object.assign(introspectBody, { ...LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME } });
 
+  if (introspectBody.scope) {
+    introspectBody.scope = introspectBody.scope.replace(/https:\/\/www\.googleapis\.com\/auth\/userinfo\./g, '');
+  }
+
   response.writeHead(200, {
     'Content-Type': 'application/json',
     ...CORS_HEADERS,
