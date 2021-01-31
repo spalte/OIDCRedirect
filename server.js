@@ -293,8 +293,20 @@ async function certsListener(request, response) {
 async function introspectListener(request, response) {
   let introspectBody;
   const { token } = await readPost(request);
-  if (token === REFRESH_TOKEN) {
-    introspectBody = { active: true };
+  let myToken;
+  try {
+    myToken = jwt.verify(token, SERVER_PRIVATE_KEY, { algorithms: ['RS256'] });
+  // eslint-disable-next-line no-empty
+  } catch (err) { }
+
+  if (myToken) {
+    introspectBody = myToken;
+    introspectBody.token_type = 'id_token';
+  } else if (token === REFRESH_TOKEN) {
+    introspectBody = {
+      active: true,
+      token_type: 'refresh_token',
+    };
   } else if (GOOGLE_SERVICE_ACCOUNT || GOOGLE_ID_TOKEN_CLAIMS) {
     try {
       const tokenResponse = await axios.get(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
@@ -303,13 +315,17 @@ async function introspectListener(request, response) {
         active: true,
       };
       introspectBody.iss = getIssuer(request);
+      introspectBody.token_type = 'access_token';
       delete introspectBody.aud;
       delete introspectBody.azp;
     } catch (error) {
       introspectBody = { active: false };
     }
   } else {
-    introspectBody = { active: true };
+    introspectBody = {
+      active: true,
+      token_type: 'access_token',
+    };
   }
 
   Object.assign(introspectBody, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
