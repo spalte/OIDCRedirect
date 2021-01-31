@@ -12,8 +12,11 @@
     "start": "node server.js",
     "lint": "eslint . --fix"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name" : "Joël Spaltenstein",
+    "email" : "spalte@naturalimage.ch"
+  },
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
     "jsonwebtoken": "^8.5.1",
