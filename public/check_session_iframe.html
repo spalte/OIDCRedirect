@@ -4,6 +4,24 @@
             window.addEventListener("message", receiveMessage, false);
 
             function receiveMessage(e){
+
+                var req = new XMLHttpRequest();
+req.responseType = 'json';
+req.open('GET', url, true);
+req.onload  = function() {
+   var jsonResponse = req.response;
+   // do something with jsonResponse
+};
+req.onabort  = function() {
+   var jsonResponse = req.response;
+   // do something with jsonResponse
+};
+req.onerror  = function() {
+   var jsonResponse = req.response;
+   // do something with jsonResponse
+};
+req.send(null);
+
                 console.log('checking state');
                 e.source.postMessage('unchanged', e.origin);
             };
