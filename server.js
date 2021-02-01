@@ -203,7 +203,16 @@ app.post('/token', runAsyncWrapper(async (req, res) => {
   Object.assign(idClaims, { ...LOGGED_IN_USER_SUB && { sub: LOGGED_IN_USER_SUB } });
   Object.assign(idClaims, { ...!idClaims.sub && { sub: DEFAULT_SUBJECT } });
 
-  const accessTokenData = await fetchAccessToken();
+  let accessTokenData;
+  try {
+    accessTokenData = await fetchAccessToken();
+  } catch (error) {
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+      return;
+    }
+    throw error;
+  }
 
   const responseBody = {
     access_token: accessTokenData.access_token,
