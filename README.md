@@ -4,7 +4,7 @@ OIDC Redirect is a small Node.js server that allows [OHIF](https://ohif.org), or
 
 The server is meant to be run and bound to the loopback address (127.0.0.1) of the authenticated host. The server will blindly return tokens to any callers.
 
-The server could be made accessible only to a specific subnet in order to allow access for all users on that subnet – although some additional hardening would be appropriate. Please contact me at [spalte@naturalimage.ch](mailto:spalte@naturalimage.ch) if you are interested in this use case.
+The server could be made accessible only to a specific subnet in order to allow access for all users on that subnet.
 
 Authentication with Google can be accomplished by either passing an OAuth2 refresh_token along with an id_token and client_secret, or can be set up by directly using a Service Account using a Google credential file in JSON format.
 

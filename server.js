@@ -5,6 +5,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const { pem2jwk } = require('pem-jwk');
 const NodeRSA = require('node-rsa');
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const nocache = require('nocache');
@@ -64,8 +65,6 @@ const SERVER_JWK_KEY_ID = '0';
 
 const DEFAULT_SUBJECT = 'default_subject';
 
-const REFRESH_TOKEN = 'refresh_me';
-
 const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
 
 const GOOGLE_SERVICE_ACCOUNT = GOOGLE_SERVICE_ACCOUNT_CREDENTIAL
@@ -92,6 +91,18 @@ if (GOOGLE_ID_TOKEN) {
 
   GOOGLE_ID_TOKEN_CLAIMS = { ...userClaims };
 }
+
+const REFRESH_TOKEN = crypto.createHash('sha256').update([
+  'LOGGED_IN_USER_SUB',
+  'LOGGED_IN_USER_NAME',
+  'LOGGED_IN_USER_EMAIL',
+  'GOOGLE_SERVICE_ACCOUNT_CREDENTIAL',
+  'SERVER_PRIVATE_KEY',
+  'GOOGLE_ID_TOKEN',
+  'GOOGLE_REFRESH_TOKEN',
+  'GOOGLE_CLIENT_SECRET',
+  'LISTEN_PORT',
+].join()).digest('base64');
 
 // will no longer be needed in Express.js 5
 function runAsyncWrapper(callback) {
@@ -169,6 +180,11 @@ app.get('/auth', (req, res) => {
 
 app.post('/token', runAsyncWrapper(async (req, res) => {
   const issuer = getIssuer(req);
+
+  if (req.body.grant_type === 'refresh_token' && req.body.refresh_token !== REFRESH_TOKEN) {
+    res.status(400).json({ error: 'invalid_grant' });
+    return;
+  }
 
   const idClaims = {
     iss: issuer,
@@ -305,12 +321,18 @@ async function getRefreshAccessToken() {
   params.append('refresh_token', GOOGLE_REFRESH_TOKEN);
   params.append('scope', 'openid email profile https://www.googleapis.com/auth/cloud-platform');
 
-  return (await axios.post('https://oauth2.googleapis.com/token', params, {
+  const { data } = await axios.post('https://oauth2.googleapis.com/token', params, {
     auth: {
       username: GOOGLE_ID_TOKEN_CLAIMS.aud,
       password: GOOGLE_CLIENT_SECRET,
     },
-  })).data;
+  });
+
+  if (data.refresh_token) {
+    GOOGLE_REFRESH_TOKEN = data.refresh_token;
+  }
+
+  return data;
 }
 
 function getIssuer(request) {
@@ -328,5 +350,5 @@ function getIssuer(request) {
 }
 
 app.listen(LISTEN_PORT, () => {
-  console.log(`Example app listening at http://localhost:${LISTEN_PORT}`);
+  console.log(`OIDC Redirect listening at http://localhost:${LISTEN_PORT}`);
 });
