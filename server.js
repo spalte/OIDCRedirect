@@ -17,6 +17,7 @@ app.use(cors({
 }));
 app.use(express.urlencoded());
 app.use(nocache());
+app.use(express.static('public'));
 app.set('json spaces', 2);
 app.set('etag', false);
 app.set('x-powered-by', false);
@@ -134,6 +135,7 @@ app.get('/.well-known/openid-configuration', (req, res) => {
     userinfo_endpoint: `${issuer}/userinfo`,
     introspection_endpoint: `${issuer}/introspect`,
     jwks_uri: `${issuer}/certs`,
+    check_session_iframe: `${issuer}/check_session_iframe.html`,
     response_types_supported: [
       'code',
     ],
@@ -171,6 +173,8 @@ app.get('/auth', (req, res) => {
   const redirectUri = new URL(req.query.redirect_uri);
 
   redirectUri.searchParams.append('code', 'code');
+  redirectUri.searchParams.append('session_state', REFRESH_TOKEN);
+
   if (req.query.state) {
     redirectUri.searchParams.append('state', req.query.state);
   }
