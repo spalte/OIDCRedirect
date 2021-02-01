@@ -58,7 +58,7 @@ Alternatively, if `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOG
 
 ---
 
-## Manually obtaining a refresh_token and and id_token for debugging
+## Manually obtaining a refresh_token and and id_token
 
 The following steps can be followed in order to manually obtain a Google refresh_token and id_token.
 
