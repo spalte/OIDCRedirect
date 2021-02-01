@@ -68,7 +68,7 @@ Create an [OAuth 2.0 Client ID](https://console.developers.google.com/apis/crede
 https://accounts.google.com/o/oauth2/v2/auth?scope=openid%20email%20profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=12345&prompt=consent&access_type=offline&client_id=$(client_id)&redirect_uri=$(redirect_uri)
 ```
 
-Follow the login process, and collect the code in the url once redirected. Replace the variable in the following shell command, and execute it.
+Follow the login process, and collect the code in the url once redirected. Replace the variables in the following shell command, and execute it.
 
 ```shell
 curl -H "Origin: $(allowed_origin)" "https://$(client_id):$(client_secret)@oauth2.googleapis.com/token" -d grant_type=authorization_code -d redirect_uri=$(redirect_uri) -d code=$(code)
