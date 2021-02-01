@@ -8,18 +8,12 @@ const NodeRSA = require('node-rsa');
 const express = require('express');
 const cors = require('cors');
 
-const corsOptions = {
-  origin: '*',
-  methods: 'HEAD,GET,POST,OPTIONS',
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-};
-
 const app = express();
-app.use(cors(corsOptions));
-// app.use(cors({ allowedHeaders: ['Content-Type', 'Authorization'] }));
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  allowedHeaders: 'Authorization',
+  methods: 'HEAD,GET,POST',
+}));
+app.use(express.urlencoded());
 app.set('etag', false);
 
 const {
@@ -169,7 +163,7 @@ app.get('/auth', (req, res) => {
   res.redirect(redirectUri);
 });
 
-app.post('/token', cors(corsOptions), runAsyncWrapper(async (req, res) => {
+app.post('/token', runAsyncWrapper(async (req, res) => {
   const issuer = getIssuer(req);
 
   const idClaims = {
