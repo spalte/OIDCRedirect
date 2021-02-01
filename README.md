@@ -58,18 +58,18 @@ Alternatively, if `GOOGLE_ID_TOKEN_FILE`, `GOOGLE_REFRESH_TOKEN_FILE`, and `GOOG
 
 ---
 
-## Manually obtaining a refresh_token and and id_token
+## Manually obtaining a refresh_token and an id_token
 
 The following steps can be followed in order to manually obtain a Google refresh_token and id_token.
 
 Create an [OAuth 2.0 Client ID](https://console.developers.google.com/apis/credentials). Once the Client ID is created, replace the variables in the following URL and point a web browser to it. It may be helpful to have the browser debugger open if the return_uri does not point to a real web site.
 
 ```URL
-https://accounts.google.com/o/oauth2/v2/auth?scope=openid%20email%20profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=12345&prompt=consent&access_type=offline&client_id=$(client_id)&redirect_uri=$(redirect_uri)
+https://accounts.google.com/o/oauth2/v2/auth?scope=openid%20email%20profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform&response_type=code&state=12345&prompt=consent&access_type=offline&client_id=$(client_id)&redirect_uri=$(urlencoded_redirect_uri)
 ```
 
 Follow the login process, and collect the code in the url once redirected. Replace the variables in the following shell command, and execute it.
 
 ```shell
-curl -H "Origin: $(allowed_origin)" "https://$(client_id):$(client_secret)@oauth2.googleapis.com/token" -d grant_type=authorization_code -d redirect_uri=$(redirect_uri) -d code=$(code)
+curl -H "Origin: $(allowed_origin)" "https://$(client_id):$(client_secret)@oauth2.googleapis.com/token" -d grant_type=authorization_code -d redirect_uri=$(urlencoded_redirect_uri) -d code=$(code)
 ```
