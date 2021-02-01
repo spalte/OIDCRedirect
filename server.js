@@ -7,6 +7,7 @@ const { pem2jwk } = require('pem-jwk');
 const NodeRSA = require('node-rsa');
 const express = require('express');
 const cors = require('cors');
+const nocache = require('nocache');
 
 const app = express();
 app.use(cors({
@@ -14,7 +15,10 @@ app.use(cors({
   methods: 'HEAD,GET,POST',
 }));
 app.use(express.urlencoded());
+app.use(nocache());
+app.set('json spaces', 2);
 app.set('etag', false);
+app.set('x-powered-by', false);
 
 const {
   SERVER_PRIVATE_KEY_FILE,
@@ -187,8 +191,6 @@ app.post('/token', runAsyncWrapper(async (req, res) => {
     }),
   };
 
-  res.set('Cache-control', 'no-store');
-  res.set('Pragma', 'no-cache');
   res.json(responseBody);
 }));
 
