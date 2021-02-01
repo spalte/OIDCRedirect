@@ -5,7 +5,7 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/spalte/OIDCRedirect.git"
-  },  
+  },
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,12 +13,14 @@
     "lint": "eslint . --fix"
   },
   "author": {
-    "name" : "Joël Spaltenstein",
-    "email" : "spalte@naturalimage.ch"
+    "name": "Joël Spaltenstein",
+    "email": "spalte@naturalimage.ch"
   },
   "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "node-rsa": "^1.1.1",
     "pem-jwk": "^2.0.0"

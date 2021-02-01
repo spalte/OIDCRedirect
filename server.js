@@ -1,20 +1,26 @@
 /* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
 const fs = require('fs');
-const querystring = require('querystring');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const { pem2jwk } = require('pem-jwk');
-const http = require('http');
 const NodeRSA = require('node-rsa');
+const express = require('express');
+const cors = require('cors');
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization',
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Max-Age': 86400,
+const corsOptions = {
+  origin: '*',
+  methods: 'HEAD,GET,POST,OPTIONS',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 };
+
+const app = express();
+app.use(cors(corsOptions));
+// app.use(cors({ allowedHeaders: ['Content-Type', 'Authorization'] }));
+app.use(express.urlencoded({ extended: true }));
+app.set('etag', false);
 
 const {
   SERVER_PRIVATE_KEY_FILE,
@@ -89,6 +95,14 @@ if (GOOGLE_ID_TOKEN) {
   GOOGLE_ID_TOKEN_CLAIMS = { ...userClaims };
 }
 
+// will no longer be needed in Express.js 5
+function runAsyncWrapper(callback) {
+  return (req, res, next) => {
+    callback(req, res, next)
+      .catch(next);
+  };
+}
+
 async function fetchAccessToken() {
   if (GOOGLE_SERVICE_ACCOUNT) {
     return getServiceAccountAccessToken();
@@ -101,56 +115,8 @@ async function fetchAccessToken() {
   return getStaticAccessToken();
 }
 
-function requestListener(request, response) {
-  (async function selectPath() {
-    const url = new URL(request.url, `http://${request.headers.host}`);
-
-    if (request.method === 'OPTIONS') {
-      response.writeHead(204, CORS_HEADERS);
-      response.end();
-      return;
-    }
-
-    switch (url.pathname) {
-      case '/.well-known/openid-configuration':
-        await configurationListener(request, response);
-        break;
-      case '/auth':
-        await authListener(request, response);
-        break;
-      case '/token':
-        await tokenListener(request, response);
-        break;
-      case '/userinfo':
-        await userinfoListener(request, response);
-        break;
-      case '/certs':
-        await certsListener(request, response);
-        break;
-      case '/introspect':
-        await introspectListener(request, response);
-        break;
-      default:
-        response.writeHead(404, {
-          'Content-Type': 'text/plain',
-          ...CORS_HEADERS,
-        });
-        response.write('404 Not Found\n');
-        response.end();
-    }
-  }()).catch((error) => {
-    console.log(error);
-    response.writeHead(500, {
-      'Content-Type': 'text/plain',
-      ...CORS_HEADERS,
-    });
-    response.write('500 Server Error\n');
-    response.end();
-  });
-}
-
-async function configurationListener(request, response) {
-  const issuer = getIssuer(request);
+app.get('/.well-known/openid-configuration', (req, res) => {
+  const issuer = getIssuer(req);
 
   const configuration = {
     issuer,
@@ -189,41 +155,26 @@ async function configurationListener(request, response) {
     ],
   };
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json',
-    ...CORS_HEADERS,
-  });
+  res.json(configuration);
+});
 
-  response.write(JSON.stringify(configuration, null, 2));
-  response.end();
-}
-
-async function authListener(request, response) {
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const state = url.searchParams.get('state');
-
-  const redirectUri = new URL(url.searchParams.get('redirect_uri'));
+app.get('/auth', (req, res) => {
+  const redirectUri = new URL(req.query.redirect_uri);
 
   redirectUri.searchParams.append('code', 'code');
-  if (state) {
-    redirectUri.searchParams.append('state', state);
+  if (req.query.state) {
+    redirectUri.searchParams.append('state', req.query.state);
   }
 
-  response.writeHead(302, {
-    Location: redirectUri.toString(),
-    ...CORS_HEADERS,
-  });
-  response.end();
-}
+  res.redirect(redirectUri);
+});
 
-async function tokenListener(request, response) {
-  const requestParameters = await readPost(request);
-  const clientId = requestParameters.client_id;
-  const issuer = getIssuer(request);
+app.post('/token', cors(corsOptions), runAsyncWrapper(async (req, res) => {
+  const issuer = getIssuer(req);
 
   const idClaims = {
     iss: issuer,
-    aud: clientId,
+    aud: req.body.client_id,
   };
 
   Object.assign(idClaims, { ...GOOGLE_ID_TOKEN_CLAIMS && { sub: GOOGLE_ID_TOKEN_CLAIMS.sub } });
@@ -236,23 +187,18 @@ async function tokenListener(request, response) {
     access_token: accessTokenData.access_token,
     token_type: accessTokenData.token_type,
     expires_in: accessTokenData.expires_in,
-    ...(requestParameters.grant_type === 'authorization_code' && {
+    ...(req.body.grant_type === 'authorization_code' && {
       refresh_token: REFRESH_TOKEN,
       id_token: jwt.sign(idClaims, SERVER_PRIVATE_KEY, { algorithm: 'RS256', expiresIn: '1h', keyid: SERVER_JWK_KEY_ID }),
     }),
   };
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-store',
-    Pragma: 'no-cache',
-    ...CORS_HEADERS,
-  });
-  response.write(JSON.stringify(responseBody, null, 2));
-  response.end();
-}
+  res.set('Cache-control', 'no-store');
+  res.set('Pragma', 'no-cache');
+  res.json(responseBody);
+}));
 
-async function userinfoListener(request, response) {
+app.get('/userinfo', (req, res) => {
   const userinfo = {};
 
   if (GOOGLE_ID_TOKEN_CLAIMS) {
@@ -265,15 +211,10 @@ async function userinfoListener(request, response) {
   Object.assign(userinfo, { ...LOGGED_IN_USER_NAME && { name: LOGGED_IN_USER_NAME } });
   Object.assign(userinfo, { ...!userinfo.sub && { sub: DEFAULT_SUBJECT } });
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json',
-    ...CORS_HEADERS,
-  });
-  response.write(JSON.stringify(userinfo, null, 2));
-  response.end();
-}
+  res.json(userinfo);
+});
 
-async function certsListener(request, response) {
+app.get('/certs', (req, res) => {
   const keys = [{
     n: SERVER_JWK.n,
     e: SERVER_JWK.e,
@@ -283,17 +224,12 @@ async function certsListener(request, response) {
     use: 'sig',
   }];
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json',
-    ...CORS_HEADERS,
-  });
-  response.write(JSON.stringify(keys, null, 2));
-  response.end();
-}
+  res.json(keys);
+});
 
-async function introspectListener(request, response) {
+app.post('/introspect', runAsyncWrapper(async (req, res) => {
   let introspectBody;
-  const { token } = await readPost(request);
+  const { token } = req.body;
   let myToken;
   try {
     myToken = jwt.verify(token, SERVER_PRIVATE_KEY, { algorithms: ['RS256'] });
@@ -315,7 +251,7 @@ async function introspectListener(request, response) {
         ...tokenResponse.data,
         active: true,
       };
-      introspectBody.iss = getIssuer(request);
+      introspectBody.iss = getIssuer(req);
       introspectBody.token_type = 'access_token';
       delete introspectBody.aud;
       delete introspectBody.azp;
@@ -339,13 +275,8 @@ async function introspectListener(request, response) {
     introspectBody.scope = introspectBody.scope.concat(' offline_access');
   }
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json',
-    ...CORS_HEADERS,
-  });
-  response.write(JSON.stringify(introspectBody, null, 2));
-  response.end();
-}
+  res.json(introspectBody);
+}));
 
 async function getStaticAccessToken() {
   return Promise.resolve({
@@ -386,28 +317,13 @@ async function getRefreshAccessToken() {
   })).data;
 }
 
-function readPost(request) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    request.on('data', (data) => {
-      body += data;
-    });
-    request.on('end', () => {
-      resolve(querystring.parse(body));
-    });
-    request.on('error', (err) => {
-      reject(err);
-    });
-  });
-}
-
 function getIssuer(request) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
   let issuer = ISSUER;
   if (!issuer) {
     if (request.headers['x-forwarded-host']) {
-      issuer = `${request.headers['x-forwarded-proto']}://${request.headers['x-forwarded-host']}`;
+      issuer = `${request.headers['x-forwarded-proto'].split(',')[0]}://${request.headers['x-forwarded-host'].split(',')[0]}`;
     } else {
       issuer = url.origin;
     }
@@ -415,10 +331,6 @@ function getIssuer(request) {
   return issuer;
 }
 
-const server = http.createServer(requestListener);
-server.listen(LISTEN_PORT, () => {
-  console.log('Server is running');
-});
-server.on('error', (error) => {
-  console.log(error);
+app.listen(LISTEN_PORT, () => {
+  console.log(`Example app listening at http://localhost:${LISTEN_PORT}`);
 });
