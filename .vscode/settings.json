@@ -9,9 +9,11 @@
         "package-lock.json"
     ],
     "cSpell.words": [
+        "DICOMweb",
+        "Fdeadend",
         "WADO",
         "dcmjs",
-        "DICOMweb",
+        "deadend",
         "etag",
         "nocache",
         "oidcredirect"

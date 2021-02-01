@@ -9,18 +9,22 @@ const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const nocache = require('nocache');
+const mustacheExpress = require('mustache-express');
 
 const app = express();
+
 app.use(cors({
   allowedHeaders: 'Authorization',
   methods: 'HEAD,GET,POST',
 }));
 app.use(express.urlencoded());
 app.use(nocache());
-app.use(express.static('public'));
 app.set('json spaces', 2);
 app.set('etag', false);
 app.set('x-powered-by', false);
+app.set('views', './views');
+app.engine('html', mustacheExpress());
+app.set('view engine', 'html');
 
 const {
   SERVER_PRIVATE_KEY_FILE,
@@ -293,6 +297,14 @@ app.post('/introspect', runAsyncWrapper(async (req, res) => {
 
   res.json(introspectBody);
 }));
+
+app.get('/check_session_iframe.html', (req, res) => {
+  res.render('check_session_iframe', { issuer: getIssuer(req) });
+});
+
+app.get('/deadend', (req, res) => {
+  res.json(req.query);
+});
 
 async function getStaticAccessToken() {
   return Promise.resolve({

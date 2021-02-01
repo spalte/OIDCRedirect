@@ -1,0 +1,45 @@
+<html>
+    <body>
+        <script>
+            window.addEventListener("message", receiveMessage, false);
+
+            function receiveMessage(e){
+                if (typeof event.data !== 'string') {
+                    return
+                }
+
+                var data = event.data.split(' ');
+                if (data.length != 2) {
+                    return;
+                }
+
+                var clientId = data[0];
+                var sessionState = data[1];
+
+                const issuer = '{{{issuer}}}';
+                const encodedIssuer = encodeURIComponent(issuer);
+
+                var url = issuer + '/auth?prompt=none&scope=openid&response_type=none&redirect_uri=' + encodedIssuer + '%2Fdeadend&client_id=' + clientId;
+
+                var req = new XMLHttpRequest();
+                req.responseType = 'json';
+                req.open('GET', url, true);
+                req.onload  = function() {
+                    var jsonResponse = req.response;
+                    if (jsonResponse.session_state === sessionState) {
+                        e.source.postMessage('unchanged', e.origin);
+                    } else {
+                        e.source.postMessage('changed', e.origin);
+                    }
+                };
+                req.onabort = function() {
+                    e.source.postMessage('error', e.origin);
+                };
+                req.onerror  = function() {
+                    e.source.postMessage('error', e.origin);
+                };
+                req.send(null);
+            };
+        </script>
+    </body>
+</html>
