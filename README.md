@@ -40,6 +40,8 @@ OHIF will open and initiate an OIDC flow with the OIDC Redirect server and conne
 
 `LISTEN_PORT` *Optional* Can be used to set what port will be used. Default is 80.
 
+`LISTEN_ADDRESS` *Optional* IP address to bind. Set to the unspecified address (`0.0.0.0`) to bind all addresses. Default is `127.0.0.1`. The Docker image default is `0.0.0.0`.
+
 `SERVER_PRIVATE_KEY_FILE` *Optional* Can be specified to provide the key the server will use to sign the returned `id_token`. If this is not specified, a new private key will be generated at startup. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named, `server_private_key.pem`.
 
 If `GOOGLE_SERVICE_ACCOUNT_CREDENTIAL_FILE` is defined, an Access Token acquired from Google for that service account will be returned. This variable should point to a Google Service account credential file in JSON format. The commented out values in the `docker-compose.yml` rely on the presence of a file that must be created and named `service-account.json`.

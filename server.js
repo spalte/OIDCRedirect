@@ -71,6 +71,7 @@ const SERVER_JWK_KEY_ID = '0';
 const DEFAULT_SUBJECT = 'default_subject';
 
 const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
+const LISTEN_ADDRESS = process.env.LISTEN_ADDRESS || '127.0.0.1';
 
 const GOOGLE_SERVICE_ACCOUNT = GOOGLE_SERVICE_ACCOUNT_CREDENTIAL
   && JSON.parse(GOOGLE_SERVICE_ACCOUNT_CREDENTIAL);
@@ -374,6 +375,6 @@ function getIssuer(request) {
   return issuer;
 }
 
-app.listen(LISTEN_PORT, () => {
-  console.log(`OIDC Redirect listening at http://localhost:${LISTEN_PORT}`);
+app.listen(LISTEN_PORT, LISTEN_ADDRESS || '127.0.0.1', () => {
+  console.log(`OIDC Redirect listening at http://${LISTEN_ADDRESS}:${LISTEN_PORT}`);
 });
