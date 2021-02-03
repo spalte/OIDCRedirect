@@ -367,7 +367,7 @@ function getIssuer(request) {
   let issuer = ISSUER;
   if (!issuer) {
     if (request.headers['x-forwarded-host']) {
-      issuer = `${request.headers['x-forwarded-proto'].split(',')[0]}://${request.headers['x-forwarded-host'].split(',')[0]}`;
+      issuer = `${request.headers['x-forwarded-proto'] || 'http'}://${request.headers['x-forwarded-host']}`;
     } else {
       issuer = url.origin;
     }
