@@ -4,7 +4,7 @@ services:
     build: .
     user: "node"
     ports:
-      - "127.0.0.1:8085:80"
+      - "127.0.0.1:8085:8080"
 #    environment:
 #      - LOGGED_IN_USER_SUB=12345
 #      - LOGGED_IN_USER_NAME=Joël Spaltenstein

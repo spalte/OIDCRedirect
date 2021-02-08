@@ -38,7 +38,7 @@ OHIF will open and initiate an OIDC flow with the OIDC Redirect server and conne
 
 `ISSUER` *Optional* Can be set to specify at what URL the service will be running (ex. `http://127.0.0.1:8085`). By default an attempt will be made to derive the issuer from the request.
 
-`LISTEN_PORT` *Optional* Can be used to set what port will be used. Default is 80.
+`LISTEN_PORT` *Optional* Can be used to set what port will be used. Default is 8080.
 
 `LISTEN_ADDRESS` *Optional* IP address to bind. Set to the unspecified address (`0.0.0.0`) to bind all addresses. Default is `127.0.0.1`. The Docker image default is `0.0.0.0`.
 

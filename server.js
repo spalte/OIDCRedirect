@@ -71,7 +71,7 @@ const SERVER_JWK_KEY_ID = '0';
 
 const DEFAULT_SUBJECT = 'default_subject';
 
-const LISTEN_PORT = Number(process.env.LISTEN_PORT || 80);
+const LISTEN_PORT = Number(process.env.LISTEN_PORT || 8080);
 const LISTEN_ADDRESS = process.env.LISTEN_ADDRESS || '127.0.0.1';
 
 const GOOGLE_SERVICE_ACCOUNT = GOOGLE_SERVICE_ACCOUNT_CREDENTIAL
