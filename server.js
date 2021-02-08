@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
+const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
@@ -22,7 +23,7 @@ app.use(nocache());
 app.set('json spaces', 2);
 app.set('etag', false);
 app.set('x-powered-by', false);
-app.set('views', './views');
+app.set('views', path.join(__dirname, 'views'));
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 
